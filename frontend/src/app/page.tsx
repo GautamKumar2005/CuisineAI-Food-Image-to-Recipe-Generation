@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react";
 import axios from "axios";
-import { Upload, ChevronRight, Utensils, BookOpen, Linkedin, Github, ArrowLeft, Play, Loader2, Share2, User, Settings, Check, Sparkles, Menu, X as CloseIcon } from "lucide-react";
+import { Upload, ChevronRight, Utensils, BookOpen, LogOut, Linkedin, Github, ArrowLeft, Play, Loader2, Share2, User, Settings, Check, Sparkles, Menu, X as CloseIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSession, signIn, signOut } from "next-auth/react";
 import Link from "next/link";
@@ -130,8 +130,13 @@ function Dashboard() {
         headers: { "Content-Type": "multipart/form-data" }
       });
       
-      // Server handles auto-saving now, just update state
+      // The server-side predict route now automatically saves history for logged-in users.
       setResult(res.data);
+      
+      // Auto scroll to results
+      setTimeout(() => {
+          document.getElementById('results-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 500);
     } catch (error) {
       console.error(error);
       alert("Error generating recipe. Please check your backend.");
@@ -151,26 +156,34 @@ function Dashboard() {
             <span className="text-orange-500">Cuisine</span>AI
           </Link>
           
-          <div className="hidden md:flex items-center gap-6 lg:gap-8 font-bold text-slate-800 text-sm">
-            <Link href="/history" className="hover:text-orange-500 transition-colors">History</Link>
+          <div className="hidden md:flex items-center gap-10">
+            <Link href="/history" className="text-[10px] uppercase font-black tracking-[0.2em] text-slate-500 hover:text-orange-500 transition-all flex items-center gap-2 group">
+                <BookOpen className="w-4 h-4 text-slate-300 group-hover:text-orange-500 transition-colors" />
+                History
+            </Link>
+            
             {session ? (
-                <div className="flex items-center gap-3">
-                    <Link href="/profile" className="flex items-center gap-2 bg-orange-50 border border-orange-200/50 px-3 py-1.5 rounded-2xl hover:bg-orange-100 hover:shadow-md transition-all group">
+                <div className="flex items-center gap-6">
+                    <Link href="/profile" className="flex items-center gap-3 pl-6 border-l border-slate-100 group">
                         <div className="relative">
-                            <div className="w-7 h-7 rounded-xl bg-orange-500 flex items-center justify-center text-white font-black text-xs shadow-md shadow-orange-500/30">
-                                {session.user?.name?.charAt(0).toUpperCase() || <User className="w-3.5 h-3.5" />}
+                            <div className="w-8 h-8 rounded-xl bg-slate-900 flex items-center justify-center text-white text-[10px] font-black group-hover:bg-orange-500 transition-colors shadow-lg">
+                                {session.user?.name?.charAt(0).toUpperCase()}
                             </div>
-                            <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white shadow-sm animate-pulse" title="Live Session"/>
+                            <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white animate-pulse" />
                         </div>
-                        <div className="hidden lg:flex flex-col">
-                            <span className="text-[9px] uppercase tracking-widest font-black text-orange-400">Signed in as</span>
-                            <span className="text-xs font-black text-slate-900 leading-tight max-w-[100px] truncate">{session.user?.name || session.user?.email}</span>
+                        <div className="flex flex-col">
+                            <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 leading-none mb-1">Dashboard</span>
+                            <span className="text-xs font-black text-slate-900 group-hover:text-orange-500 transition-colors">{session.user?.name?.split(' ')[0]}</span>
                         </div>
                     </Link>
-                    <button onClick={() => signOut()} className="bg-slate-900 text-white px-5 py-2 rounded-2xl text-[10px] uppercase font-black tracking-widest hover:bg-slate-800 transition-colors border border-transparent active:scale-95">Logout</button>
+                    <button onClick={() => signOut()} className="p-2 text-slate-300 hover:text-red-500 transition-colors" title="Sign Out">
+                        <LogOut className="w-4 h-4" />
+                    </button>
                 </div>
             ) : (
-                <button onClick={() => signIn()} className="bg-orange-500 text-white px-5 py-2 rounded-2xl text-[10px] uppercase font-black tracking-widest hover:bg-orange-600 transition-colors shadow-lg shadow-orange-500/20 active:scale-95">Sign In</button>
+                <button onClick={() => signIn()} className="bg-orange-500 text-white px-8 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-orange-600 transition-all shadow-xl shadow-orange-500/20 active:scale-95">
+                    Sign In
+                </button>
             )}
           </div>
 

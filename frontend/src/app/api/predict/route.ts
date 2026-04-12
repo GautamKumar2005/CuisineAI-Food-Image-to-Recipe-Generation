@@ -1,4 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "../auth/[...nextauth]/route";
+import dbConnect from "../../../lib/mongodb";
+import History from "../../../models/History";
 
 export async function POST(req: NextRequest) {
     try {
@@ -69,29 +73,23 @@ export async function POST(req: NextRequest) {
             console.warn("[Next.js BRIDGE] Could not encode image to base64:", imgErr);
         }
 
-        // 3. SERVER-SIDE AUTO-HISTORY (Persistence Guarantee)
-        try {
-            // Dynamic imports to keep the main bridge lightweight
-            const { getServerSession } = await import("next-auth/next");
-            const { authOptions } = await import("../auth/[...nextauth]/route");
-            const History = (await import("../../../models/History")).default;
-            const dbConnect = (await import("../../../lib/mongodb")).default;
-
-            const session = await getServerSession(authOptions) as any;
-            
-            if (session && session.user && session.user.id) {
+        // 3. SERVER-SIDE AUTO-SAVE (Ensures "data history stored must be")
+        const session = await getServerSession(authOptions) as any;
+        if (session && session.user) {
+            try {
                 await dbConnect();
-                const savedHistory = await History.create({
+                const newHistory = await History.create({
                     userId: session.user.id,
-                    title: parsedData.title || "Unknown Dish",
-                    ingredients: parsedData.ingredients || [],
-                    recipe: parsedData.recipe || [],
-                    imageUrl: parsedData.imageUrl
+                    title: parsedData.title,
+                    ingredients: parsedData.ingredients,
+                    recipe: parsedData.recipe,
+                    imageUrl: parsedData.imageUrl, // Store base64 or link
                 });
-                parsedData._id = savedHistory._id;
+                parsedData._id = newHistory._id; // Provide the ID for immediate sharing
+                console.log("[SERVER SAVE] History record created:", newHistory._id);
+            } catch (saveErr) {
+                console.error("[SERVER SAVE] Failed to auto-save history:", saveErr);
             }
-        } catch (histErr) {
-            console.error("[Next.js BRIDGE] Server-side history save failed:", histErr);
         }
 
         return NextResponse.json(parsedData);
