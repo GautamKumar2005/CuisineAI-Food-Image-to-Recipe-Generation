@@ -8,7 +8,7 @@ import { Utensils, Mail, Lock, User, ArrowRight, Loader2, Eye, EyeOff, Sparkles 
 import axios from "axios";
 
 export default function AuthPage() {
-  const { data: session, status, update } = useSession();
+  const { data: session, status } = useSession();
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -43,12 +43,9 @@ export default function AuthPage() {
         if (res?.error) {
           setError("Invalid email or password");
         } else {
-          // Force NextAuth to sync its JWT and then navigate.
-          // update() tells the client-side session to refresh from the server.
-          await update();
-          // Use router.push so Next.js can re-render with the fresh session in-process.
-          router.push("/");
-          router.refresh();
+          // Use window.location.replace for a robust redirect that ensures 
+          // session cookies are properly picked up by the browser on HF.
+          window.location.replace("/");
         }
       } else {
         await axios.post("/api/register", formData);

@@ -16,20 +16,17 @@ if [ -z "$DATABASE_URL" ]; then
 else
   echo "✅ DATABASE_URL is set"
 fi
-if [ -z "$NEXTAUTH_URL" ]; then
-  if [ -n "$SPACE_ID" ]; then
+if [ -n "$SPACE_ID" ]; then
     # Construct HF Space URL from SPACE_ID (e.g. "user/space" -> "https://user-space.hf.space")
     HF_OWNER=$(echo $SPACE_ID | cut -d/ -f1 | tr '[:upper:]' '[:lower:]')
     HF_NAME=$(echo $SPACE_ID | cut -d/ -f2 | tr '[:upper:]' '[:lower:]')
-    # Replace dots and underscores with dashes as per HF URL convention
     HF_OWNER_CLEAN=$(echo $HF_OWNER | tr '_' '-' | tr '.' '-')
     HF_NAME_CLEAN=$(echo $HF_NAME | tr '_' '-' | tr '.' '-')
     export NEXTAUTH_URL="https://${HF_OWNER_CLEAN}-${HF_NAME_CLEAN}.hf.space"
-    echo "🌐 Auto-detected Hugging Face URL: $NEXTAUTH_URL"
-  else
+    echo "🌐 Auto-detected Hugging Face URL (Forcing): $NEXTAUTH_URL"
+elif [ -z "$NEXTAUTH_URL" ]; then
     echo "⚠️  NEXTAUTH_URL not set and not on HF Space, using local default..."
     export NEXTAUTH_URL="http://localhost:7860"
-  fi
 fi
 echo "   NEXTAUTH_URL = $NEXTAUTH_URL"
 echo "========================================================"
