@@ -58,7 +58,6 @@ export async function POST(req: NextRequest) {
         const parsedData = await response.json();
 
         // 2. Post-process: Convert image to Base64 for session persistence/UI display
-        // (Maintaining the exact output configuration as requested)
         try {
             const arrayBuffer = await imageFile.arrayBuffer();
             const imageBuffer = Buffer.from(arrayBuffer);
@@ -68,6 +67,31 @@ export async function POST(req: NextRequest) {
             parsedData.imageUrl = base64Image;
         } catch (imgErr) {
             console.warn("[Next.js BRIDGE] Could not encode image to base64:", imgErr);
+        }
+
+        // 3. SERVER-SIDE AUTO-HISTORY (Persistence Guarantee)
+        try {
+            // Dynamic imports to keep the main bridge lightweight
+            const { getServerSession } = await import("next-auth/next");
+            const { authOptions } = await import("../auth/[...nextauth]/route");
+            const History = (await import("../../../models/History")).default;
+            const dbConnect = (await import("../../../lib/mongodb")).default;
+
+            const session = await getServerSession(authOptions) as any;
+            
+            if (session && session.user && session.user.id) {
+                await dbConnect();
+                const savedHistory = await History.create({
+                    userId: session.user.id,
+                    title: parsedData.title || "Unknown Dish",
+                    ingredients: parsedData.ingredients || [],
+                    recipe: parsedData.recipe || [],
+                    imageUrl: parsedData.imageUrl
+                });
+                parsedData._id = savedHistory._id;
+            }
+        } catch (histErr) {
+            console.error("[Next.js BRIDGE] Server-side history save failed:", histErr);
         }
 
         return NextResponse.json(parsedData);

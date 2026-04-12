@@ -130,18 +130,8 @@ function Dashboard() {
         headers: { "Content-Type": "multipart/form-data" }
       });
       
-      if (session) {
-        const historyData = {
-          ...res.data,
-          imageUrl: res.data.imageUrl
-        };
-        // Save and get the persistent ID
-        const savedHistory = await axios.post("/api/history", historyData);
-        setResult(savedHistory.data);
-      } else {
-        // Guest user mode - result has no persistent ID for sharing
-        setResult(res.data);
-      }
+      // Server handles auto-saving now, just update state
+      setResult(res.data);
     } catch (error) {
       console.error(error);
       alert("Error generating recipe. Please check your backend.");
