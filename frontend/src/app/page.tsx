@@ -225,117 +225,61 @@ function Dashboard() {
       </nav>
 
       <main className="max-w-7xl mx-auto px-4 md:px-6 pt-24 md:pt-28 pb-12 overflow-x-hidden">
-        <AnimatePresence mode="wait">
-        {!session ? (
-            <motion.div 
-            key="about"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            className="mb-12 bg-white/60 backdrop-blur-xl p-6 md:p-8 lg:p-10 rounded-[2rem] md:rounded-[2.5rem] border border-orange-500/10 shadow-2xl shadow-orange-500/5 relative overflow-hidden group w-full"
-            >
-            <div className="absolute top-[-50px] right-[-50px] w-64 h-64 bg-orange-500/5 rounded-full blur-[80px] group-hover:bg-orange-500/10 transition-colors duration-700 pointer-events-none"/>
-            <div className="relative z-10 flex flex-col md:flex-row gap-8 items-center md:items-start lg:items-center">
-                <div className="w-full md:flex-1 space-y-4 text-center md:text-left order-2 md:order-1">
-                    <div className="flex items-center justify-center md:justify-start gap-3">
-                    <div className="w-10 h-10 rounded-2xl bg-orange-500 flex items-center justify-center text-white shadow-lg shadow-orange-500/20">
-                        <Sparkles className="w-5 h-5" />
-                    </div>
-                    <h2 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight italic">About <span className="text-orange-500">Us</span></h2>
-                    </div>
-                    
-                    <div className="space-y-4">
-                        <p className="text-slate-600 font-bold text-sm md:text-base leading-relaxed tracking-tight max-w-full md:max-w-4xl break-words">
-                        Cuisine AI is a smart food image to recipe in form of text generation platform that makes cooking simple and interactive. Users can upload or enter an image of a dish, and the system instantly generates the recipe, including ingredients and step-by-step instructions. Powered by advanced AI, it understands food visuals and converts them into easy cooking guidance. 
-                        </p>
-                        <AnimatePresence>
-                            {showMoreAbout && (
-                                <motion.p 
-                                    initial={{ opacity: 0, height: 0 }}
-                                    animate={{ opacity: 1, height: "auto" }}
-                                    exit={{ opacity: 0, height: 0 }}
-                                    className="text-slate-600 font-bold text-sm md:text-base leading-relaxed tracking-tight break-words overflow-hidden"
-                                >
-                                    The platform also supports, allowing users to read and listen. Cuisine AI acts as a digital kitchen assistant, helping users discover, learn, and recreate dishes effortlessly while making the cooking experience more accessible and enjoyable.
-                                </motion.p>
-                            )}
-                        </AnimatePresence>
-                        <button 
-                            onClick={() => setShowMoreAbout(!showMoreAbout)}
-                            className="text-orange-500 font-black text-[10px] uppercase tracking-widest hover:underline flex items-center gap-2 mx-auto md:mx-0 p-2"
-                        >
-                            {showMoreAbout ? "Read Less" : "Read More Mission"} 
-                            <div className={`w-4 h-4 bg-orange-100 rounded-full flex items-center justify-center transition-transform ${showMoreAbout ? 'rotate-180' : ''}`}>
-                                <ArrowLeft className="w-2.5 h-2.5 -rotate-90" />
-                            </div>
-                        </button>
-                    </div>
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-12 bg-white/60 backdrop-blur-xl p-6 md:p-8 lg:p-10 rounded-[2rem] md:rounded-[2.5rem] border border-orange-500/10 shadow-2xl shadow-orange-500/5 relative overflow-hidden group w-full"
+        >
+          <div className="absolute top-[-50px] right-[-50px] w-64 h-64 bg-orange-500/5 rounded-full blur-[80px] group-hover:bg-orange-500/10 transition-colors duration-700 pointer-events-none"/>
+          <div className="relative z-10 flex flex-col md:flex-row gap-8 items-center md:items-start lg:items-center">
+             <div className="w-full md:flex-1 space-y-4 text-center md:text-left order-2 md:order-1">
+                <div className="flex items-center justify-center md:justify-start gap-3">
+                   <div className="w-10 h-10 rounded-2xl bg-orange-500 flex items-center justify-center text-white shadow-lg shadow-orange-500/20">
+                      <Sparkles className="w-5 h-5" />
+                   </div>
+                   <h2 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight italic">About <span className="text-orange-500">Us</span></h2>
                 </div>
                 
-                <div className="w-full md:w-auto flex justify-center order-1 md:order-2 flex-shrink-0">
-                    <div className="w-32 h-32 md:w-40 lg:w-48 md:h-40 lg:h-48 rounded-3xl lg:rounded-[3rem] bg-slate-50 border-4 border-white shadow-2xl flex items-center justify-center overflow-hidden group-hover:scale-105 transition-all duration-700 relative">
-                        <img 
-                        src="/chef.png" 
-                        className="w-full h-full object-cover grayscale-[0.2] group-hover:grayscale-0 transition-all duration-700" 
-                        alt="The CuisineAI Chef" 
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-orange-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700"/>
-                    </div>
+                <div className="space-y-4">
+                    <p className="text-slate-600 font-bold text-sm md:text-base leading-relaxed tracking-tight max-w-full md:max-w-4xl break-words">
+                      Cuisine AI is a smart food image to recipe in form of text generation platform that makes cooking simple and interactive. Users can upload or enter an image of a dish, and the system instantly generates the recipe, including ingredients and step-by-step instructions. Powered by advanced AI, it understands food visuals and converts them into easy cooking guidance. 
+                    </p>
+                    <AnimatePresence>
+                        {showMoreAbout && (
+                            <motion.p 
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: "auto" }}
+                                exit={{ opacity: 0, height: 0 }}
+                                className="text-slate-600 font-bold text-sm md:text-base leading-relaxed tracking-tight break-words overflow-hidden"
+                            >
+                                The platform also supports, allowing users to read and listen. Cuisine AI acts as a digital kitchen assistant, helping users discover, learn, and recreate dishes effortlessly while making the cooking experience more accessible and enjoyable.
+                            </motion.p>
+                        )}
+                    </AnimatePresence>
+                    <button 
+                        onClick={() => setShowMoreAbout(!showMoreAbout)}
+                        className="text-orange-500 font-black text-[10px] uppercase tracking-widest hover:underline flex items-center gap-2 mx-auto md:mx-0 p-2"
+                    >
+                        {showMoreAbout ? "Read Less" : "Read More Mission"} 
+                        <div className={`w-4 h-4 bg-orange-100 rounded-full flex items-center justify-center transition-transform ${showMoreAbout ? 'rotate-180' : ''}`}>
+                            <ArrowLeft className="w-2.5 h-2.5 -rotate-90" />
+                        </div>
+                    </button>
                 </div>
-            </div>
-            </motion.div>
-        ) : (
-            <motion.div 
-            key="dashboard"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            className="mb-12 bg-slate-900 border border-slate-800 rounded-[2rem] md:rounded-[3rem] p-6 md:p-10 shadow-2xl relative overflow-hidden group"
-            >
-                <div className="absolute top-0 right-0 w-96 h-96 bg-orange-500/10 rounded-full blur-[120px] pointer-events-none group-hover:bg-orange-500/20 transition-all duration-1000"/>
-                <div className="relative z-10 grid md:grid-cols-12 gap-8 items-center">
-                    <div className="md:col-span-7 space-y-6">
-                        <div className="flex items-center gap-4">
-                            <div className="w-14 h-14 rounded-2xl bg-orange-500 flex items-center justify-center shadow-xl shadow-orange-500/20 text-white">
-                                <User size={28} className="font-black" />
-                            </div>
-                            <div>
-                                <h2 className="text-3xl md:text-5xl font-black text-white tracking-tighter">
-                                    Welcome back, <span className="text-orange-500">{session.user?.name?.split(' ')[0]}!</span>
-                                </h2>
-                                <p className="text-slate-400 font-bold text-xs uppercase tracking-[0.3em] flex items-center gap-2 mt-2">
-                                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"/>
-                                    Active Culinary Session
-                                </p>
-                            </div>
-                        </div>
-                        
-                        <div className="flex flex-wrap gap-4">
-                            <Link href="/history" className="bg-white/5 hover:bg-orange-500 text-white px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border border-white/10 hover:border-transparent flex items-center gap-2">
-                                <BookOpen size={14} /> My Recipes
-                            </Link>
-                            <Link href="/profile" className="bg-white/5 hover:bg-white/10 text-white px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border border-white/10 flex items-center gap-2">
-                                <Settings size={14} /> Account Settings
-                            </Link>
-                        </div>
-                    </div>
-
-                    <div className="md:col-span-5 grid grid-cols-2 gap-4">
-                        <div className="bg-white/5 p-6 rounded-[2rem] border border-white/10 backdrop-blur-md">
-                            <div className="text-3xl font-black text-orange-500 leading-none mb-1">{userStats.count}</div>
-                            <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-tight">Total Recipes Synthesized</div>
-                        </div>
-                        <div className="bg-white/5 p-6 rounded-[2rem] border border-white/10 backdrop-blur-md">
-                            <div className="text-3xl font-black text-blue-400 leading-none mb-1">
-                                {userStats.count > 10 ? "Chef" : userStats.count > 5 ? "Sous-Chef" : "Enthusiast"}
-                            </div>
-                            <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-tight">Culinary Rank</div>
-                        </div>
-                    </div>
+             </div>
+             
+             <div className="w-full md:w-auto flex justify-center order-1 md:order-2 flex-shrink-0">
+                <div className="w-32 h-32 md:w-40 lg:w-48 md:h-40 lg:h-48 rounded-3xl lg:rounded-[3rem] bg-slate-50 border-4 border-white shadow-2xl flex items-center justify-center overflow-hidden group-hover:scale-105 transition-all duration-700 relative">
+                    <img 
+                      src="/chef.png" 
+                      className="w-full h-full object-cover grayscale-[0.2] group-hover:grayscale-0 transition-all duration-700" 
+                      alt="The CuisineAI Chef" 
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-orange-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700"/>
                 </div>
-            </motion.div>
-        )}
-        </AnimatePresence>
+             </div>
+          </div>
+        </motion.div>
 
         <div className="grid lg:grid-cols-12 gap-8 items-start">
           
