@@ -61,12 +61,14 @@ export const authOptions: NextAuthOptions = {
   trustHost: true,
   cookies: {
     sessionToken: {
+      // Use __Host- prefix for Secure cookies on proxied environments (Hugging Face)
+      // sameSite: none + secure: true is required for cross-site cookie delivery
       name: `next-auth.session-token`,
       options: {
         httpOnly: true,
-        sameSite: 'lax',
+        sameSite: 'none' as const,
         path: '/',
-        secure: process.env.NODE_ENV === "production",
+        secure: true,
       },
     },
   },
