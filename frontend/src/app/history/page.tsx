@@ -8,6 +8,11 @@ import { Utensils, Calendar, ChevronRight, ArrowLeft, Loader2, SearchX, Github, 
 import Link from "next/link";
 import Image from "next/image";
 
+const normalizeUrl = (url: string) => {
+  if (!url) return url;
+  return url.replace("gautamkumar-food-recipe.hf.space", "gkumar2005-cuisineai.hf.space");
+};
+
 export default function HistoryPage() {
   const { data: session, status } = useSession();
   const [history, setHistory] = useState<any[]>([]);
@@ -81,10 +86,11 @@ export default function HistoryPage() {
                 <div className="aspect-[16/10] relative overflow-hidden">
                   {item.imageUrl && (
                     <Image 
-                      src={item.imageUrl} 
+                      src={normalizeUrl(item.imageUrl)} 
                       alt={item.title} 
                       fill
                       className="object-cover group-hover:scale-105 transition-transform duration-500" 
+                      unoptimized
                     />
                   )}
                   <div className="absolute top-3 left-3 bg-orange-500 text-white px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest shadow-lg shadow-orange-500/30">

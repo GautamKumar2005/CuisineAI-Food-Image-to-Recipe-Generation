@@ -9,6 +9,12 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 
+const normalizeUrl = (url: string) => {
+  if (!url) return url;
+  // Replace legacy hostname with current one if found in stored data
+  return url.replace("gautamkumar-food-recipe.hf.space", "gkumar2005-cuisineai.hf.space");
+};
+
 function Dashboard() {
   const { data: session } = useSession();
   const searchParams = useSearchParams();
@@ -84,7 +90,7 @@ function Dashboard() {
       axios.get(`/api/history/${historyId}`)
         .then(res => {
           setResult(res.data);
-          setPreview(res.data.imageUrl);
+          setPreview(normalizeUrl(res.data.imageUrl));
         })
         .catch(err => console.error("Error loading history", err))
         .finally(() => setLoading(false));
@@ -264,7 +270,7 @@ function Dashboard() {
         <div className="grid lg:grid-cols-12 gap-8 items-start">
           
           {/* Left Column: Control Panel */}
-          <div className="lg:col-span-5 space-y-6">
+          <div className="lg:col-span-5 space-y-6 relative z-10">
             <div className="space-y-2">
               <span className="text-orange-500 uppercase tracking-widest font-black text-[10px] bg-orange-50 px-2 py-0.5 rounded-md inline-block">
                 {isHistoryView ? "Stored Analysis" : "Taste with AI"}
@@ -282,7 +288,7 @@ function Dashboard() {
                 <div className={`aspect-[4/3] flex flex-col items-center justify-center`}>
                     {preview ? (
                         <div className="relative w-full h-full">
-                           <Image src={preview} fill className="object-cover" alt="Preview"/>
+                           <Image src={normalizeUrl(preview)} fill className="object-cover" alt="Preview" unoptimized/>
                         </div>
                     ) : (
                         <label className="cursor-pointer flex flex-col items-center justify-center w-full h-full p-4 text-center">

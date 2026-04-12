@@ -6,8 +6,11 @@ import { AuthProvider } from "../components/Providers";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "CuisineAI - Food Image to Recipe",
-  description: "Predict ingredients and recipes from food images using AI",
+  title: "CuisineAI | Your Neural Culinary Assistant",
+  description: "Identify dishes, predict ingredients, and generate recipes with high-performance AI.",
+  icons: {
+    icon: "/favicon.png",
+  },
 };
 
 export default function RootLayout({
