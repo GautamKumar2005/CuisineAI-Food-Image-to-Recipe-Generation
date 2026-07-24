@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { spawn } from "child_process";
-import path from "path";
-import fs from "fs";
-import { promisify } from "util";
-
-const writeFile = promisify(fs.writeFile);
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "../auth/[...nextauth]/route";
+import dbConnect from "../../../lib/mongodb";
+import History from "../../../models/History";
 
 export async function POST(req: NextRequest) {
     try {
@@ -15,85 +13,104 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "No image file provided" }, { status: 400 });
         }
 
-        // 1. Setup paths
-        // Use absolute paths for Docker stability
-        const isDocker = process.env.NODE_ENV === "production";
-        const rootDir = isDocker ? "/app" : path.resolve(process.cwd(), "..");
-        const tempDir = path.join(rootDir, "temp_uploads");
+        // 1. Forward the request to the high-performance Flask backend (Strict IPv4)
+        const flaskBackendUrl = "http://127.0.0.1:5000/api/predict_json";
         
-        if (!fs.existsSync(tempDir)) {
-            try { fs.mkdirSync(tempDir, { recursive: true }); } catch (e) {}
+        // 1. Pre-flight health check to ensure backend is ready (Strict IPv4)
+        try {
+            const healthCheck = await fetch("http://127.0.0.1:5000/api/health", { signal: AbortSignal.timeout(5000) });
+            if (!healthCheck.ok) {
+                return NextResponse.json(
+                    { error: "AI Engine is still warming up. Please try again in 30 seconds." }, 
+                    { status: 503 }
+                );
+            }
+        } catch (hErr) {
+            console.warn("[Next.js BRIDGE] Health check failed, fetching boot logs...");
+            let bootLogs = "No logs available.";
+            try {
+                const logsRes = await fetch("http://localhost:5000/api/logs", { signal: AbortSignal.timeout(2000) });
+                if (logsRes.ok) bootLogs = await logsRes.text();
+            } catch (lErr) {}
+
+            return NextResponse.json(
+                { 
+                    error: "AI Engine is initializing. Please wait a moment and try again.",
+                    backendLogs: bootLogs 
+                }, 
+                { status: 503 }
+            );
         }
 
-        const tempFilePath = path.join(tempDir, `${Date.now()}_${imageFile.name}`);
-        
-        // 2. Save the uploaded file temporarily so Python can read it
-        const arrayBuffer = await imageFile.arrayBuffer();
-        const buffer = Buffer.from(arrayBuffer);
-        await writeFile(tempFilePath, buffer);
+        const backendFormData = new FormData();
+        backendFormData.append("imagefile", imageFile);
 
-        // 3. Spawn Python process using the bridge script
-        const responseData = await new Promise<NextResponse>((resolve) => {
-            const pythonCmd = process.platform === "win32" ? "python" : "python3";
-            const bridgeScript = path.join(rootDir, "predict_bridge.py");
-
-            console.log(`[Next.js BRIDGE] Running ${pythonCmd} on ${bridgeScript}`);
-            
-            const pythonProcess = spawn(pythonCmd, [bridgeScript, tempFilePath]);
-
-            let result = "";
-            let errorArr = "";
-
-            pythonProcess.stdout.on("data", (data) => {
-                result += data.toString();
-            });
-
-            pythonProcess.stderr.on("data", (data) => {
-                errorArr += data.toString();
-            });
-
-            pythonProcess.on("close", (code) => {
-                if (code !== 0) {
-                    console.error("[Next.js BRIDGE] Python Error Exit Code:", code);
-                    console.error("[Next.js BRIDGE] ERR:", errorArr);
-                    resolve(NextResponse.json({ error: "Failed to process image", details: errorArr }, { status: 500 }));
-                    return;
-                }
-
-                try {
-                    // Search for JSON block between markers
-                    const jsonMatch = result.match(/---JSON_START---([\s\S]*?)---JSON_END---/);
-                    const finalResult = jsonMatch ? jsonMatch[1].trim() : result.trim();
-                    
-                    const parsedData = JSON.parse(finalResult);
-                    if (parsedData.error) {
-                        console.error("[Next.js BRIDGE] Logic Error:", parsedData.error);
-                        resolve(NextResponse.json({ error: parsedData.error, details: parsedData.traceback }, { status: 500 }));
-                    } else {
-                        // Convert image to Base64 so it persists in MongoDB
-                        // (temp_uploads is ephemeral on Hugging Face)
-                        try {
-                            const imageBuffer = fs.readFileSync(tempFilePath);
-                            const ext = imageFile.name.split('.').pop()?.toLowerCase() || 'jpg';
-                            const mimeType = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
-                            const base64Image = `data:${mimeType};base64,${imageBuffer.toString('base64')}`;
-                            parsedData.imageUrl = base64Image;
-                        } catch (imgErr) {
-                            console.warn("[Next.js BRIDGE] Could not encode image to base64:", imgErr);
-                        }
-                        resolve(NextResponse.json(parsedData));
-                    }
-                } catch (e) {
-                    console.error("[Next.js BRIDGE] Parse Error:", e);
-                    resolve(NextResponse.json({ error: "Invalid response from AI engine" }, { status: 500 }));
-                }
-            });
+        const response = await fetch(flaskBackendUrl, {
+            method: "POST",
+            body: backendFormData,
         });
 
-        return responseData;
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error("[Next.js BRIDGE] Flask backend error:", errorText);
+            return NextResponse.json(
+                { error: "Backend prediction failed", details: errorText }, 
+                { status: response.status }
+            );
+        }
+
+        const parsedData = await response.json();
+
+        // 2. Post-process: Convert image to Base64 for session persistence/UI display
+        try {
+            const arrayBuffer = await imageFile.arrayBuffer();
+            const imageBuffer = Buffer.from(arrayBuffer);
+            const ext = imageFile.name.split('.').pop()?.toLowerCase() || 'jpg';
+            const mimeType = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
+            const base64Image = `data:${mimeType};base64,${imageBuffer.toString('base64')}`;
+            parsedData.imageUrl = base64Image;
+        } catch (imgErr) {
+            console.warn("[Next.js BRIDGE] Could not encode image to base64:", imgErr);
+        }
+
+        // 3. SERVER-SIDE AUTO-SAVE (Ensures "data history stored must be")
+        const session = await getServerSession(authOptions) as any;
+        if (session && session.user) {
+            try {
+                await dbConnect();
+                const newHistory = await History.create({
+                    userId: session.user.id,
+                    title: parsedData.title,
+                    ingredients: parsedData.ingredients,
+                    recipe: parsedData.recipe,
+                    imageUrl: parsedData.imageUrl, // Store base64 or link
+                });
+                parsedData._id = newHistory._id; // Provide the ID for immediate sharing
+                console.log("[SERVER SAVE] History record created:", newHistory._id);
+            } catch (saveErr) {
+                console.error("[SERVER SAVE] Failed to auto-save history:", saveErr);
+            }
+        }
+
+        return NextResponse.json(parsedData);
 
     } catch (error: any) {
         console.error("[Next.js BRIDGE] Global Bridge Error:", error);
-        return NextResponse.json({ error: "Internal Server Error", details: error.message }, { status: 500 });
+        
+        // Final attempt: try to fetch backend logs to explain the failure
+        let logs = "Could not retrieve backend logs.";
+        try {
+            const logsRes = await fetch("http://localhost:5000/api/logs", { signal: AbortSignal.timeout(2000) });
+            if (logsRes.ok) logs = await logsRes.text();
+        } catch (lErr) {}
+
+        return NextResponse.json(
+            { 
+                error: "Internal Server Error", 
+                details: error.message,
+                backendLogs: logs 
+            }, 
+            { status: 500 }
+        );
     }
 }

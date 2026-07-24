@@ -1,7 +1,16 @@
 import mongoose from "mongoose";
 
-const MONGODB_URI = process.env.DATABASE_URL!;
+const MONGODB_URI = process.env.DATABASE_URL;
 
+if (!MONGODB_URI) {
+  throw new Error("Please define the DATABASE_URL environment variable inside .env");
+}
+
+/**
+ * Global is used here to maintain a cached connection across hot reloads
+ * in development. This prevents connections growing exponentially
+ * during API Route usage.
+ */
 let cached = (global as any).mongoose;
 
 if (!cached) {
@@ -9,13 +18,6 @@ if (!cached) {
 }
 
 async function dbConnect() {
-  if (!MONGODB_URI) {
-    // Only throw if we are actually at runtime on Render
-    if (process.env.NODE_ENV === "production" && !process.env.NEXT_PHASE) {
-       console.error("DATABASE_URL is missing!");
-    }
-    return null;
-  }
   if (cached.conn) {
     return cached.conn;
   }
@@ -25,7 +27,7 @@ async function dbConnect() {
       bufferCommands: false,
     };
 
-    cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
+    cached.promise = mongoose.connect(MONGODB_URI!, opts).then((mongoose) => {
       return mongoose;
     });
   }
